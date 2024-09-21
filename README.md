@@ -1,7 +1,3 @@
-Aqui está o seu **README** atualizado com as versões em português, espanhol e inglês, incluindo o novo desenvolvedor **Vitor Donnangelo**.
-
----
-
 ## 🔷 XSS Scanner
 
               ,---------------------------,            
