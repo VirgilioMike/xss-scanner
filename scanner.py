@@ -113,29 +113,28 @@ def print_report(results, url, method_counts, input_type_counts):
     for input_type, count in input_type_counts.items():
         print(f"  - {input_type}: {count} campo(s)")
     
-    print(f"\nTotal de formulários analisados: {len(results)}\n")
+    print(f"\nTotal de itens analisados: {len(results)}\n")
 
     # Cabeçalho da Tabela com a coluna de Descrição Técnica
-    print(f"{'Item':<6} | {'Payload':<40} | {'Status HTTP':<12} | {'Refletido?':<10} | {'CVE':<12} | {'Descrição Técnica':<50}")
-    print("-" * 150)
+    print(f"{'Payload':<40} | {'Status HTTP':<12} | {'Refletido?':<10} | {'CVE':<12} | {'Descrição Técnica':<50}")
+    print("-" * 140)
 
-    # Iterar por todos os resultados e adicionar o código de item
-    for idx, result in enumerate(results, start=1):
-        item_code = f"{idx:02}"  # Gerar código começando com 01, 02, 03...
-        print(f"{item_code:<6} | "
-              f"{result['payload']:<40} | "
+    # Iterar por todos os resultados
+    for result in results:
+        print(f"{result['payload']:<40} | "
               f"{result['status_code']:<12} | "
               f"{'Sim' if result['reflected_payload'] else 'Não':<10} | "
               f"{result['cve']:<12} | "
               f"{result['description']:<50}")
-    print("-" * 150)
+    print("-" * 140)
 
     # Adicionar uma breve recomendação para mitigação com exemplos práticos
     print("""
     Mitigação:
     
-    01.Escapar adequadamente o conteúdo dinâmico:
-       Sempre escape o conteúdo dinâmico que será renderizado em HTML, JavaScript ou CSS. Isso garante que qualquer dado fornecido pelo usuário seja tratado como texto, e não como código executável.
+    CVE-2020-11022. 
+    Escapar adequadamente o conteúdo dinâmico:
+    Sempre escape o conteúdo dinâmico que será renderizado em HTML, JavaScript ou CSS. Isso garante que qualquer dado fornecido pelo usuário seja tratado como texto, e não como código executável.
        
        Exemplo em Python (Flask):
        ```python
@@ -147,16 +146,18 @@ def print_report(results, url, method_counts, input_type_counts):
            return f"Olá, {escape(user_input)}!"
        ```
 
-    02.Utilizar Content Security Policy (CSP):
-       A CSP ajuda a prevenir a execução de scripts maliciosos, restringindo quais fontes de conteúdo (como scripts, imagens, etc.) são permitidas no site.
+    CVE-2019-11358. 
+    Utilizar Content Security Policy (CSP):
+    A CSP ajuda a prevenir a execução de scripts maliciosos, restringindo quais fontes de conteúdo (como scripts, imagens, etc.) são permitidas no site.
        
        Exemplo de configuração de CSP no cabeçalho HTTP:
        ```plaintext
        Content-Security-Policy: default-src 'self'; script-src 'self' https://apis.google.com
        ```
 
-    03.Validar e higienizar todas as entradas dos usuários:
-       Antes de processar dados de entrada, é fundamental validá-los para garantir que eles não contenham scripts maliciosos. Isso pode ser feito filtrando caracteres especiais e verificando o formato dos dados.
+    CVE-2020-7598. 
+    Validar e higienizar todas as entradas dos usuários:
+    Antes de processar dados de entrada, é fundamental validá-los para garantir que eles não contenham scripts maliciosos. Isso pode ser feito filtrando caracteres especiais e verificando o formato dos dados.
 
        Exemplo de sanitização em JavaScript:
        ```javascript
