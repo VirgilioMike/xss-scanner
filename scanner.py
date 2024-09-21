@@ -5,8 +5,14 @@ from collections import Counter
 # Função para pegar todos os formulários de uma URL
 def get_all_forms(url):
     """Captura todos os formulários de uma página web"""
-    soup = bs(requests.get(url).content, "html.parser")
-    return soup.find_all("form")
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # Levanta exceção para códigos HTTP de erro
+        soup = bs(response.content, "html.parser")
+        return soup.find_all("form")
+    except requests.exceptions.RequestException as e:
+        print(f"[!] Erro ao acessar a URL: {e}")
+        return None  # Retorna None se houver algum problema ao acessar a URL
 
 # Função para extrair os detalhes do formulário
 def get_form_details(form):
@@ -41,7 +47,10 @@ payload_descriptions = {
 # Função para enviar payloads de teste XSS e verificar vulnerabilidade
 def test_xss_in_form(url, form_details, payload):
     """Testa um formulário enviando payload XSS nos campos"""
-    target_url = url if form_details["action"] is None or form_details["action"] == "" else form_details["action"]
+    from urllib.parse import urljoin
+
+    # Constrói a URL correta se o "action" for relativo
+    target_url = urljoin(url, form_details["action"]) if form_details["action"] else url
     method = form_details["method"]
     
     # Prepara os dados do formulário com o payload
@@ -53,27 +62,31 @@ def test_xss_in_form(url, form_details, payload):
             data[input_detail["name"]] = "test"  # Valores padrão para outros campos
 
     # Envia a requisição com base no método do formulário
-    if method == "post":
-        res = requests.post(target_url, data=data)
-    else:
-        res = requests.get(target_url, params=data)
-    
-    # Verifica se o payload aparece na resposta
-    reflected_payload = payload in res.text
+    try:
+        if method == "post":
+            res = requests.post(target_url, data=data)
+        else:
+            res = requests.get(target_url, params=data)
+        
+        # Verifica se o payload aparece na resposta
+        reflected_payload = payload in res.text
 
-    # Verifica qual CVE está relacionada ao payload
-    cve = payload_to_cve.get(payload, "N/A")
+        # Verifica qual CVE está relacionada ao payload
+        cve = payload_to_cve.get(payload, "N/A")
 
-    result = {
-        "url": target_url,
-        "payload": payload,
-        "status_code": res.status_code,
-        "reflected_payload": reflected_payload,
-        "cve": cve,
-        "description": payload_descriptions.get(payload, "Descrição não disponível")
-    }
-    
-    return result
+        result = {
+            "url": target_url,
+            "payload": payload,
+            "status_code": res.status_code,
+            "reflected_payload": reflected_payload,
+            "cve": cve,
+            "description": payload_descriptions.get(payload, "Descrição não disponível")
+        }
+        
+        return result
+    except requests.exceptions.RequestException as e:
+        print(f"[!] Erro ao enviar requisição ao formulário: {e}")
+        return None
 
 # Função para exibir o relatório na CLI
 def print_report(results, url, method_counts, input_type_counts):
@@ -121,11 +134,15 @@ def print_report(results, url, method_counts, input_type_counts):
 
     # Iterar por todos os resultados
     for result in results:
-        print(f"{result['payload']:<40} | "
-              f"{result['status_code']:<12} | "
-              f"{'Sim' if result['reflected_payload'] else 'Não':<10} | "
-              f"{result['cve']:<12} | "
-              f"{result['description']:<50}")
+        if result:
+            print(f"{result['payload']:<40} | "
+                f"{result['status_code']:<12} | "
+                f"{'Sim' if result['reflected_payload'] else 'Não':<10} | "
+                f"{result['cve']:<12} | "
+                f"{result['description']:<50}")
+        else:
+            print(f"[!] Um erro ocorreu durante o teste de um formulário.")
+
     print("-" * 140)
 
     # Adicionar uma breve recomendação para mitigação com exemplos práticos
@@ -173,38 +190,49 @@ def print_report(results, url, method_counts, input_type_counts):
 # Função principal
 if __name__ == "__main__":
     url = input("Digite a URL a ser analisada: ")
+    
+    # Tenta obter todos os formulários da URL
     forms = get_all_forms(url)
-    print(f"[+] Detectado {len(forms)} formulário(s) em {url}.\n")
+    if forms is None:
+        print(f"[!] Não foi possível realizar a análise de segurança. Possíveis razões:\n"
+              f"    - A URL fornecida está inacessível ou incorreta.\n"
+              f"    - O site pode estar protegido contra automação (CAPTCHA ou Firewalls).\n"
+              f"    - Nenhum formulário foi encontrado na URL fornecida.\n"
+              f"    - Verifique se a URL está correta e tente novamente.")
+    elif len(forms) == 0:
+        print(f"[!] Nenhum formulário encontrado na URL: {url}")
+    else:
+        print(f"[+] Detectado {len(forms)} formulário(s) em {url}.\n")
 
-    # Contadores para métodos HTTP e tipos de campos de entrada
-    method_counts = Counter()
-    input_type_counts = Counter()
+        # Contadores para métodos HTTP e tipos de campos de entrada
+        method_counts = Counter()
+        input_type_counts = Counter()
 
-    # Payloads XSS comuns para testar
-    xss_payloads = [
-        "<script>alert('XSS')</script>",
-        "\"'><script>alert('XSS')</script>",
-        "<img src=x onerror=alert('XSS')>",
-    ]
+        # Payloads XSS comuns para testar
+        xss_payloads = [
+            "<script>alert('XSS')</script>",
+            "\"'><script>alert('XSS')</script>",
+            "<img src=x onerror=alert('XSS')>",
+        ]
 
-    results = []
+        results = []
 
-    # Itera por todos os formulários e coleta detalhes de métodos e tipos de entrada
-    for i, form in enumerate(forms, start=1):
-        form_details = get_form_details(form)
-        print(f"Testando formulário #{i} em {form_details['action'] or 'URL raiz'}")
-        
-        # Contar o método HTTP
-        method_counts[form_details["method"]] += 1
-        
-        # Contar tipos de entrada
-        for input_detail in form_details["inputs"]:
-            input_type_counts[input_detail["type"]] += 1
-        
-        # Testar cada payload XSS no formulário
-        for payload in xss_payloads:
-            result = test_xss_in_form(url, form_details, payload)
-            results.append(result)
+        # Itera por todos os formulários e coleta detalhes de métodos e tipos de entrada
+        for i, form in enumerate(forms, start=1):
+            form_details = get_form_details(form)
+            print(f"Testando formulário #{i} em {form_details['action'] or 'URL raiz'}")
+            
+            # Contar o método HTTP
+            method_counts[form_details["method"]] += 1
+            
+            # Contar tipos de entrada
+            for input_detail in form_details["inputs"]:
+                input_type_counts[input_detail["type"]] += 1
+            
+            # Testar cada payload XSS no formulário
+            for payload in xss_payloads:
+                result = test_xss_in_form(url, form_details, payload)
+                results.append(result)
 
-    # Exibir o relatório na CLI
-    print_report(results, url, method_counts, input_type_counts)
+        # Exibir o relatório na CLI
+        print_report(results, url, method_counts, input_type_counts)

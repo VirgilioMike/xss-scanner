@@ -27,7 +27,7 @@ O **XSS Scanner** não é apenas uma ferramenta de detecção, mas também um **
 
 ## 🛠️ Tecnologias Utilizadas
 
-- 🐍 **Python**: A linguagem utilizada para automatizar a análise.  
+- 🐍 **Python**: Linguagem utilizada para automatizar a análise.  
 - 🌐 **Requests**: Para executar requisições HTTP de maneira simples e eficiente.  
 - 📝 **BeautifulSoup**: Para análise e extração de dados dos formulários no HTML.  
 - 🔢 **Collections (Counter)**: Para contar e exibir o número de métodos HTTP e tipos de entrada encontrados nos formulários.  
