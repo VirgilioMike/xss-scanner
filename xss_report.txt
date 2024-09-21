@@ -1,0 +1,22 @@
+
+        XSS-Scanner Security Report
+        
+             ______
+            |      |
+            | LOCK | XSS-Scanner
+            |______|
+              ||||
+              ||||
+              ||||
+
+        -------------------------------------------------
+        Relatório gerado por: XSS-Scanner
+        -------------------------------------------------
+        Total de formulários analisados: 3
+
+URL                                                | Payload                                  | Status HTTP  | Refletido? | CSP | X-Frame | X-Content-Type
+------------------------------------------------------------------------------------------------------------------------------------------------------
+https://daleespanhol.com.br/                       | <script>alert('XSS')</script>            | 404          | Não        | Nenhum CSP | Nenhum X-F | Nenhum X-C
+https://daleespanhol.com.br/                       | "'><script>alert('XSS')</script>         | 404          | Não        | Nenhum CSP | Nenhum X-F | Nenhum X-C
+https://daleespanhol.com.br/                       | <img src=x onerror=alert('XSS')>         | 404          | Não        | Nenhum CSP | Nenhum X-F | Nenhum X-C
+------------------------------------------------------------------------------------------------------------------------------------------------------
