@@ -1,6 +1,9 @@
 import requests
 from bs4 import BeautifulSoup as bs
 from collections import Counter
+import json
+import datetime
+import os
 
 # Função para pegar todos os formulários de uma URL
 def get_all_forms(url):
@@ -44,6 +47,20 @@ payload_descriptions = {
     "<img src=x onerror=alert('XSS')>": "Injeta código malicioso usando evento de erro em imagem."
 }
 
+# Relacionar payloads com o tipo de varredura
+payload_scan_type = {
+    "<script>alert('XSS')</script>": "XSS Refletido",
+    "\"'><script>alert('XSS')</script>": "XSS Refletido",
+    "<img src=x onerror=alert('XSS')>": "XSS em Atributos HTML"
+}
+
+# Relacionar payloads ao OWASP Top 10
+payload_owasp_category = {
+    "<script>alert('XSS')</script>": "A7: Cross-Site Scripting (XSS)",
+    "\"'><script>alert('XSS')</script>": "A7: Cross-Site Scripting (XSS)",
+    "<img src=x onerror=alert('XSS')>": "A7: Cross-Site Scripting (XSS)"
+}
+
 # Função para enviar payloads de teste XSS e verificar vulnerabilidade
 def test_xss_in_form(url, form_details, payload):
     """Testa um formulário enviando payload XSS nos campos"""
@@ -80,7 +97,9 @@ def test_xss_in_form(url, form_details, payload):
             "status_code": res.status_code,
             "reflected_payload": reflected_payload,
             "cve": cve,
-            "description": payload_descriptions.get(payload, "Descrição não disponível")
+            "description": payload_descriptions.get(payload, "Descrição não disponível"),
+            "scan_type": payload_scan_type.get(payload, "N/A"),
+            "owasp_category": payload_owasp_category.get(payload, "N/A")
         }
         
         return result
@@ -88,10 +107,19 @@ def test_xss_in_form(url, form_details, payload):
         print(f"[!] Erro ao enviar requisição ao formulário: {e}")
         return None
 
-# Função para exibir o relatório na CLI
+# Função para exibir o relatório na CLI e gerar arquivo JSON completo
 def print_report(results, url, method_counts, input_type_counts):
-    """Imprime um relatório detalhado com os resultados da análise na CLI"""
-    
+    """Imprime um relatório detalhado e gera JSON com todas as informações"""
+
+    # Estrutura para o relatório JSON completo
+    report_data = {
+        "url_analisada": url,
+        "metodos_http": method_counts,
+        "tipos_entrada": input_type_counts,
+        "total_itens_analisados": len(results),
+        "detalhes_resultados": results
+    }
+
     # Desenho do novo ASCII com o nome XSS-Scanner
     print("""
               ,---------------------------,            
@@ -112,12 +140,12 @@ def print_report(results, url, method_counts, input_type_counts):
         |__________________________________ |/     /__/                                              
     """)
 
-    # Exibir a URL com linhas horizontais como título
+    # Exibir a URL com linhas horizontais como título na CLI
     print("\n" + "-" * 75)
     print(f"     URL analisada: {url}")
     print("-" * 75 + "\n")
     
-    # Exibir métodos e tipos de entradas encontrados
+    # Exibir métodos e tipos de entradas encontrados na CLI
     print("Métodos HTTP encontrados:")
     for method, count in method_counts.items():
         print(f"  - {method.upper()}: {count} formulário(s)")
@@ -128,64 +156,35 @@ def print_report(results, url, method_counts, input_type_counts):
     
     print(f"\nTotal de itens analisados: {len(results)}\n")
 
-    # Cabeçalho da Tabela com a coluna de Descrição Técnica
-    print(f"{'Payload':<40} | {'Status HTTP':<12} | {'Refletido?':<10} | {'CVE':<12} | {'Descrição Técnica':<50}")
-    print("-" * 140)
+    # Cabeçalho da Tabela com a coluna de Descrição Técnica na CLI
+    print(f"{'Payload':<40} | {'Status HTTP':<12} | {'Refletido?':<10} | {'CVE':<12} | {'OWASP Categoria':<20} | {'Varredura':<20} | {'Descrição Técnica':<50}")
+    print("-" * 180)
 
-    # Iterar por todos os resultados
+    # Iterar por todos os resultados para a CLI
     for result in results:
         if result:
             print(f"{result['payload']:<40} | "
                 f"{result['status_code']:<12} | "
                 f"{'Sim' if result['reflected_payload'] else 'Não':<10} | "
                 f"{result['cve']:<12} | "
+                f"{result['owasp_category']:<20} | "
+                f"{result['scan_type']:<20} | "
                 f"{result['description']:<50}")
         else:
             print(f"[!] Um erro ocorreu durante o teste de um formulário.")
-
-    print("-" * 140)
-
-    # Adicionar uma breve recomendação para mitigação com exemplos práticos
-    print("""
-    Mitigação:
     
-    CVE-2020-11022. 
-    Escapar adequadamente o conteúdo dinâmico:
-    Sempre escape o conteúdo dinâmico que será renderizado em HTML, JavaScript ou CSS. Isso garante que qualquer dado fornecido pelo usuário seja tratado como texto, e não como código executável.
-       
-       Exemplo em Python (Flask):
-       ```python
-       from flask import escape
+    print("-" * 180)
 
-       @app.route('/safe')
-       def safe():
-           user_input = request.args.get('user_input', '')
-           return f"Olá, {escape(user_input)}!"
-       ```
+    # Gerar um nome de arquivo com data e hora
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    output_file = f"relatorio_{timestamp}.json"
+    
+    # Exportar o relatório como JSON
+    with open(output_file, "w") as json_file:
+        json.dump(report_data, json_file, indent=4)
+    print(f"\n[+] Relatório exportado para: {output_file}")
 
-    CVE-2019-11358. 
-    Utilizar Content Security Policy (CSP):
-    A CSP ajuda a prevenir a execução de scripts maliciosos, restringindo quais fontes de conteúdo (como scripts, imagens, etc.) são permitidas no site.
-       
-       Exemplo de configuração de CSP no cabeçalho HTTP:
-       ```plaintext
-       Content-Security-Policy: default-src 'self'; script-src 'self' https://apis.google.com
-       ```
-
-    CVE-2020-7598. 
-    Validar e higienizar todas as entradas dos usuários:
-    Antes de processar dados de entrada, é fundamental validá-los para garantir que eles não contenham scripts maliciosos. Isso pode ser feito filtrando caracteres especiais e verificando o formato dos dados.
-
-       Exemplo de sanitização em JavaScript:
-       ```javascript
-       function sanitizeInput(input) {
-           return input.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-       }
-
-       // Uso:
-       var userInput = sanitizeInput("<script>alert('XSS')</script>");
-       ```
-    """)
+    return output_file
 
 # Função principal
 if __name__ == "__main__":
@@ -194,11 +193,7 @@ if __name__ == "__main__":
     # Tenta obter todos os formulários da URL
     forms = get_all_forms(url)
     if forms is None:
-        print(f"[!] Não foi possível realizar a análise de segurança. Possíveis razões:\n"
-              f"    - A URL fornecida está inacessível ou incorreta.\n"
-              f"    - O site pode estar protegido contra automação (CAPTCHA ou Firewalls).\n"
-              f"    - Nenhum formulário foi encontrado na URL fornecida.\n"
-              f"    - Verifique se a URL está correta e tente novamente.")
+        print(f"[!] Não foi possível realizar a análise de segurança. Verifique a URL.")
     elif len(forms) == 0:
         print(f"[!] Nenhum formulário encontrado na URL: {url}")
     else:
@@ -216,8 +211,6 @@ if __name__ == "__main__":
         ]
 
         results = []
-
-        # Itera por todos os formulários e coleta detalhes de métodos e tipos de entrada
         for i, form in enumerate(forms, start=1):
             form_details = get_form_details(form)
             print(f"Testando formulário #{i} em {form_details['action'] or 'URL raiz'}")
@@ -228,11 +221,20 @@ if __name__ == "__main__":
             # Contar tipos de entrada
             for input_detail in form_details["inputs"]:
                 input_type_counts[input_detail["type"]] += 1
-            
-            # Testar cada payload XSS no formulário
+
+            # Testar os payloads de XSS
             for payload in xss_payloads:
                 result = test_xss_in_form(url, form_details, payload)
-                results.append(result)
+                if result:
+                    results.append(result)
+        
+        # Gera o relatório e salva automaticamente com timestamp
+        output_file = print_report(results, url, method_counts, input_type_counts)
 
-        # Exibir o relatório na CLI
-        print_report(results, url, method_counts, input_type_counts)
+        # Perguntar se o usuário deseja abrir o dashboard
+        open_dashboard = input("\nDeseja abrir o dashboard? (y/n): ").strip().lower()
+        if open_dashboard == 'y':
+            print("\n[+] Abrindo o dashboard...")
+            os.system(f"streamlit run dashboard.py")
+        else:
+            print("[+] Dashboard não foi aberto.")
