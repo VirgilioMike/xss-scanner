@@ -156,24 +156,34 @@ def print_report(results, url, method_counts, input_type_counts):
     
     print(f"\nTotal de itens analisados: {len(results)}\n")
 
-    # Cabeçalho da Tabela com a coluna de Descrição Técnica na CLI
-    print(f"{'Payload':<40} | {'Status HTTP':<12} | {'Refletido?':<10} | {'CVE':<12} | {'OWASP Categoria':<20} | {'Varredura':<20} | {'Descrição Técnica':<50}")
-    print("-" * 180)
 
-    # Iterar por todos os resultados para a CLI
+    # Primeira Tabela: Informações Gerais
+    print("==== Informações Gerais sobre Payloads ====")
+    print(f"{'Payload':<40} | {'Status HTTP':<12} | {'Refletido?':<10}")
+    print("-" * 70)
     for result in results:
         if result:
             print(f"{result['payload']:<40} | "
                 f"{result['status_code']:<12} | "
-                f"{'Sim' if result['reflected_payload'] else 'Não':<10} | "
-                f"{result['cve']:<12} | "
-                f"{result['owasp_category']:<20} | "
+                f"{'Sim' if result['reflected_payload'] else 'Não':<10}")
+        else:
+             print(f"[!] Um erro ocorreu durante o teste de um formulário.")
+    print("-" * 70)
+
+    # Segunda Tabela: Detalhes Técnicos
+    print("\n==== Detalhes Técnicos sobre Vulnerabilidades ====")
+    print(f"{'CVE':<12} | {'OWASP Categoria':<25} | {'Varredura':<20} | {'Descrição Técnica':<50}")
+    print("-" * 120)
+    for result in results:
+        if result:
+             print(f"{result['cve']:<12} | "
+                f"{result['owasp_category']:<25} | "
                 f"{result['scan_type']:<20} | "
                 f"{result['description']:<50}")
         else:
             print(f"[!] Um erro ocorreu durante o teste de um formulário.")
-    
-    print("-" * 180)
+    print("-" * 120)
+
 
     # Gerar um nome de arquivo com data e hora
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")

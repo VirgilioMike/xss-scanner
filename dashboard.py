@@ -42,9 +42,9 @@ def classify_severity(cve):
 # Função para gerar recomendações baseadas no CVE
 def get_recommendations(cve):
     recommendations = {
-        "CVE-2020-11022": "Vulnerabilidade de XSS no jQuery. Atualize para a versão mais recente do jQuery. Veja detalhes [aqui](https://nvd.nist.gov/vuln/detail/CVE-2020-11022).",
-        "CVE-2019-11358": "Vulnerabilidade de XSS no jQuery. Recomenda-se atualizar o jQuery para uma versão segura. Veja detalhes [aqui](https://nvd.nist.gov/vuln/detail/CVE-2019-11358).",
-        "CVE-2020-7598": "Vulnerabilidade de XSS através de eventos em imagens (ex.: onerror). Evite usar diretamente atributos inseguros. Veja detalhes [aqui](https://nvd.nist.gov/vuln/detail/CVE-2020-7598)."
+        "CVE-2020-11022": "Vulnerabilidade de XSS no jQuery. Atualize para a versão mais recente do jQuery. Veja detalhes <a href='https://nvd.nist.gov/vuln/detail/CVE-2020-11022' target='_blank'>aqui</a>.",
+        "CVE-2019-11358": "Vulnerabilidade de XSS no jQuery. Recomenda-se atualizar o jQuery para uma versão segura. Veja detalhes <a href='https://nvd.nist.gov/vuln/detail/CVE-2019-11358' target='_blank'>aqui</a>.",
+        "CVE-2020-7598": "Vulnerabilidade de XSS através de eventos em imagens (ex.: onerror). Evite usar diretamente atributos inseguros. Veja detalhes <a href='https://nvd.nist.gov/vuln/detail/CVE-2020-7598' target='_blank'>aqui</a>."
     }
     return recommendations.get(cve, "Recomendação não disponível para este CVE.")
 
@@ -110,9 +110,9 @@ if latest_json_file:
         fig_reflected = px.pie(
             names=["Refletido", "Não Refletido"],
             values=[reflected_payloads.count(True), reflected_payloads.count(False)],
-            title="Proporção de Payloads Refletidos"
+            title="Proporção de Payloads Refletidos",
+            color_discrete_sequence=["#3498DB", "#BDC3C7"]  # Azul para refletido, cinza para não refletido
         )
-        fig_reflected.update_traces(marker=dict(colors=['#636EFA', '#EF553B']))
         st.plotly_chart(fig_reflected, use_container_width=True)
 
         # Gráfico de Vulnerabilidades por Criticidade
@@ -124,7 +124,9 @@ if latest_json_file:
         fig_severity = px.bar(
             x=list(severity_counts.keys()),  # Alta, Média, Baixa
             y=list(severity_counts.values()),  # Contagem de vulnerabilidades
-            title="Distribuição de Vulnerabilidades por Criticidade"
+            title="Distribuição de Vulnerabilidades por Criticidade",
+            color=list(severity_counts.keys()),
+            color_discrete_map={"Alta": "#E74C3C", "Média": "#F39C12", "Baixa": "#F1C40F"}  # Vermelho, Laranja, Amarelo
         )
         st.plotly_chart(fig_severity, use_container_width=True)
 
@@ -135,22 +137,29 @@ if latest_json_file:
         severity_order = {"Alta": 0, "Média": 1, "Baixa": 2}
         sorted_results = sorted(data['detalhes_resultados'], key=lambda res: severity_order[classify_severity(res['cve'])])
 
+        # Mapeamento de cores para as bolinhas
+        color_map = {"Alta": "#E74C3C", "Média": "#F39C12", "Baixa": "#F1C40F"}
+
         for idx, result in enumerate(sorted_results, 1):
             # Obter a criticidade do item
             criticidade = classify_severity(result['cve'])
 
+            # Bolinha colorida indicando a criticidade
+            bolinha_html = f"<span style='color:{color_map[criticidade]};font-size:20px;'>&#9679;</span>"
+
             # Adicionar a criticidade ao título do item
-            st.subheader(f"Item #{idx} [{criticidade}]: {result['scan_type']}")  
-            st.write(f"**URL:** {result['url']}")
-            st.write(f"**Payload:** `{result['payload']}`")  # Payload destacado como código
+            st.markdown(
+                f"""
+                {bolinha_html} **Item #{idx} [{criticidade}] - {result['scan_type']}**
+                """,
+                unsafe_allow_html=True
+            )
+            st.write(f"**Payload:** {result['payload']}")  # Payload como texto
             st.write(f"**Status HTTP:** {result['status_code']}")
             st.write(f"**Payload Refletido:** {'Sim' if result['reflected_payload'] else 'Não'}")
             st.write(f"**CVE:** {result['cve']}")
             st.write(f"**Descrição:** {result['description']}")
-            
-            # Adicionar OWASP Categoria com fallback
-            owasp_category = result.get('owasp_category', 'Categoria OWASP não disponível')
-            st.write(f"**OWASP Categoria:** {owasp_category}")
+            st.write(f"**OWASP Categoria:** {result.get('owasp_category', 'Categoria OWASP não disponível')}")
             
             # Adicionar recomendações com base no CVE
             st.markdown(
@@ -160,8 +169,10 @@ if latest_json_file:
                 </div>
                 """,
                 unsafe_allow_html=True
-         )
-        st.write("---")
+            )
+
+            # Adicionar uma linha para separar os itens
+            st.markdown("---")
 
     except FileNotFoundError:
         st.error(f"Arquivo {latest_json_file} não encontrado. Por favor, verifique o nome e tente novamente.")

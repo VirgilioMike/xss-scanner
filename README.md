@@ -203,7 +203,7 @@ El **Escáner XSS** tiene un fuerte componente didáctico. Es ideal para aprende
 🔗 [LinkedIn - Robson Damasceno](https://www.linkedin.com/in/robson-damasceno/)
 
 🔹 **Vitor Donnangelo**  
-🔗 [LinkedIn - Vitor Donnangelo](https://www.linkedin.com/in/vitordonn
+🔗 [LinkedIn - Vitor Donnangelo](https://www.linkedin.com/in/vitordonnangelo/)
 
 angelo/)
 
