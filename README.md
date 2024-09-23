@@ -19,8 +19,8 @@
 
 ---
 
-### 🔍 **Ferramenta didática para detecção e mitigação de vulnerabilidades XSS (Cross-Site Scripting) em aplicações web.**  
-O **XSS Scanner** automatiza o processo de análise de formulários em páginas web, detectando possíveis vulnerabilidades de _Cross-Site Scripting_ (XSS). Ideal para desenvolvedores, estudantes e profissionais de segurança da informação, a ferramenta identifica falhas de segurança e oferece orientações sobre como mitigá-las.
+## 🔍 XSS Scanner: Ferramenta de Detecção e Mitigação de Vulnerabilidades de Cross-Site Scripting em Aplicações Web
+O XSS Scanner é uma solução automatizada projetada para identificar e mitigar vulnerabilidades de Cross-Site Scripting (XSS) em aplicações web. Desenvolvida como parte do projeto de Trabalho de Conclusão de Curso (TCC) na Fatec São Caetano do Sul - Antonio Russo, esta ferramenta é voltada para desenvolvedores, estudantes e profissionais de segurança da informação. O XSS Scanner analisa formulários e entradas de dados em páginas web, detectando potenciais falhas de segurança e fornecendo orientações detalhadas sobre as melhores práticas para correção e prevenção de ataques XSS.
 
 ---
 
@@ -159,8 +159,8 @@ Distribuição de vulnerabilidades por criticidade:
 
 ---
 
-### 🔍 **Herramienta educativa para la detección y mitigación de vulnerabilidades XSS (Cross-Site Scripting) en aplicaciones web.**  
-El **Escáner XSS** automatiza el proceso de análisis de formularios en páginas web, detectando posibles vulnerabilidades de _Cross-Site Scripting_ (XSS). Es ideal para desarrolladores, estudiantes y profesionales de la seguridad de la información, identificando fallas de seguridad y ofreciendo orientaciones sobre cómo mitigarlas.
+### 🔍 XSS Scanner: Herramienta para la Detección y Mitigación de Vulnerabilidades de Cross-Site Scripting en Aplicaciones Web
+El XSS Scanner es una solución automatizada diseñada para identificar y mitigar vulnerabilidades de Cross-Site Scripting (XSS) en aplicaciones web. Desarrollada como parte del Proyecto Final de Carrera (TCC) en la Fatec São Caetano do Sul - Antonio Russo, esta herramienta está dirigida a desarrolladores, estudiantes y profesionales de la seguridad de la información. El XSS Scanner analiza formularios y entradas de datos en páginas web, detectando posibles fallas de seguridad y proporcionando orientación detallada sobre las mejores prácticas para corregir y prevenir ataques XSS.
 
 ---
 
@@ -213,8 +213,8 @@ angelo/)
 
 ---
 
-### 🔍 **Educational tool for detecting and mitigating XSS (Cross-Site Scripting) vulnerabilities in web applications.**  
-The **XSS Scanner** automates the process of analyzing forms on web pages, detecting potential _Cross-Site Scripting_ (XSS) vulnerabilities. It is ideal for developers, students, and security professionals to identify security flaws and receive guidance on how to mitigate them.
+## 🔍 XSS Scanner: Tool for Detecting and Mitigating Cross-Site Scripting Vulnerabilities in Web Applications
+The XSS Scanner is an automated solution designed to identify and mitigate Cross-Site Scripting (XSS) vulnerabilities in web applications. Developed as part of the Final Year Project (TCC) at Fatec São Caetano do Sul - Antonio Russo, this tool is aimed at developers, students, and information security professionals. The XSS Scanner analyzes forms and data inputs on web pages, detecting potential security flaws and providing detailed guidance on best practices for correcting and preventing XSS attacks.
 
 ---
 
